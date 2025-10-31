@@ -8,6 +8,7 @@ import (
 type ApiGroup struct {
 	ExampleApi
 	UserApi
+	WebSocketApi
 }
 
 var (

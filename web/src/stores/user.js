@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useStorage } from '@vueuse/core'
-import { login, getUserInfo } from '@/api/user'
+import { login } from '@/api/user'
 import { ElLoading, ElMessage } from 'element-plus'
 import router from '@/router'
 
@@ -88,6 +88,50 @@ export const useUserStore = defineStore('user', () => {
         await router.replace({ name: 'login' })
         ElMessage.success('已退出登录')
     }
+    // 补充到useUserStore中
+    const parseTokenAndSetUserInfo = () => {
+        if (!token.value) return; // 没有token则直接返回
+
+        try {
+            // 拆分JWT（header.payload.signature）
+            const tokenParts = token.value.split('.');
+            if (tokenParts.length !== 3) {
+                throw new Error('无效的token格式');
+            }
+
+            // 解析payload部分（Base64Url解码）
+            const payloadBase64 = tokenParts[1]
+                .replace(/-/g, '+') // 替换Base64Url中的-为+
+                .replace(/_/g, '/'); // 替换Base64Url中的_为/
+
+            // 处理Base64填充（如果长度不是4的倍数，补充=）
+            const paddingLength = 4 - (payloadBase64.length % 4);
+            const payloadBase64WithPadding = paddingLength < 4
+                ? payloadBase64 + '='.repeat(paddingLength)
+                : payloadBase64;
+
+            // 解码并转换为JSON
+            const payloadJson = decodeURIComponent(
+                atob(payloadBase64WithPadding)
+                    .split('')
+                    .map(char => '%' + ('00' + char.charCodeAt(0).toString(16)).slice(-2))
+                    .join('')
+            );
+            const payload = JSON.parse(payloadJson);
+
+            // 从payload中提取用户信息（对应之前解析的token结构：username和user_uuid）
+            setUserInfo({
+                username: payload.username || userInfo.value.username,
+                uuid: payload.uuid || userInfo.value.uuid // token中是user_uuid，对应store的uuid
+            });
+
+            console.log('token解析成功，已更新用户信息');
+        } catch (error) {
+            console.error('token解析失败:', error);
+            // 解析失败可选择清空无效token（根据业务需求）
+            // clearUserState();
+        }
+    };
 
     return {
         token,
@@ -96,6 +140,7 @@ export const useUserStore = defineStore('user', () => {
         setToken,
         clearUserState,
         loginIn,
-        logout
+        logout,
+        parseTokenAndSetUserInfo
     }
 })

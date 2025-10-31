@@ -14,9 +14,9 @@ var jwtSecret = []byte("your-secret-key")
 
 // 自定义claims
 type Claims struct {
-	UserID   int       `json:"user_id"`
+	UserID   int       `json:"id"`
 	Username string    `json:"username"`
-	UserUUID uuid.UUID `json:"user_uuid"`
+	UserUUID uuid.UUID `json:"uuid"`
 	jwt.RegisteredClaims
 }
 

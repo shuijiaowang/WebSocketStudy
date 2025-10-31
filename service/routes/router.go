@@ -33,7 +33,14 @@ func SetupRouter() *gin.Engine {
 			exampleGroup.POST("/test", exampleApi.Test) // 添加消费记录
 		}
 		// 消费拓展路由（需要认证）
+	}
 
+	websocketApi := api.WebSocketApi{}
+	websocketGroup := r.Group("/api/websocket")
+	{
+		websocketGroup.GET("test", func(c *gin.Context) {
+			websocketApi.Test(c, c.Writer, c.Request)
+		})
 	}
 
 	return r

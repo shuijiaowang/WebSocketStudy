@@ -3,6 +3,7 @@ package service
 import (
 	"SService/module/dao"
 	"SService/module/model"
+	"SService/pkg/database"
 	"errors"
 
 	"github.com/google/uuid"
@@ -56,4 +57,9 @@ func (s *UserService) Login(name, password string) (*model.User, bool) {
 		return nil, false
 	}
 	return user, true
+}
+func (s *UserService) GetUserInfo(uuid uuid.UUID) (*model.User, error) {
+	var reqUser model.User
+	err := database.DB.Where("uuid =?", uuid).First(&reqUser).Error
+	return &reqUser, err
 }
