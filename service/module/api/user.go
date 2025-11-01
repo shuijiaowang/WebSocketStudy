@@ -5,7 +5,6 @@ import (
 	"SService/pkg/util/response"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 type UserApi struct{}
@@ -48,13 +47,8 @@ func (h *UserApi) Login(c *gin.Context) {
 		response.FailWithMessage("用户名或密码错误", c)
 		return
 	}
-	userUUID, err := uuid.Parse(user.UUID)
-	if err != nil {
-		response.FailWithMessage("UUID格式错误", c)
-		return
-	}
 	// 生成JWT令牌
-	token, err := util.GenerateToken(int(user.ID), user.Username, userUUID)
+	token, err := util.GenerateToken(int(user.ID), user.Username, user.UUID)
 	if err != nil {
 		response.FailWithMessage("生成令牌失败", c)
 		return

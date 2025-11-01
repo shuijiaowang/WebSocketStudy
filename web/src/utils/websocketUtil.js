@@ -1,3 +1,5 @@
+
+import { useStorage } from '@vueuse/core'
 export default class WebSocketUtil {
     // 去掉#，使用普通属性
     uuid;
@@ -12,7 +14,9 @@ export default class WebSocketUtil {
 
     /** 初始化WebSocket连接 */
     connect() {
-        const url = `ws://localhost:7789/api/websocket/test?uuid=${this.uuid}`; // 本地
+        const token = useStorage('token', '')
+        console.log("token:",token)
+        const url = `ws://localhost:7789/api/websocket/test?token=${token.value}`; // 本地
         this.socket = new WebSocket(url);
 
         this.socket.onopen = () => {

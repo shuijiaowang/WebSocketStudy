@@ -58,7 +58,7 @@ func (s *UserService) Login(name, password string) (*model.User, bool) {
 	}
 	return user, true
 }
-func (s *UserService) GetUserInfo(uuid uuid.UUID) (*model.User, error) {
+func (s *UserService) GetUserInfo(uuid string) (*model.User, error) {
 	var reqUser model.User
 	err := database.DB.Where("uuid =?", uuid).First(&reqUser).Error
 	return &reqUser, err

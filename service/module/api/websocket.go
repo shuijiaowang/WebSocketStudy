@@ -4,6 +4,7 @@ import (
 	"SService/global"
 	"SService/module/model"
 	"SService/module/model/response"
+	"SService/pkg/util"
 	"context"
 	"encoding/json"
 	"log/slog"
@@ -11,7 +12,6 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -55,8 +55,25 @@ func NewNode(conn *websocket.Conn, user *model.User) *Node {
 func (w *WebSocketApi) Test(c *gin.Context, writer http.ResponseWriter, request *http.Request) {
 	// 获取路径上的参数
 	query := request.URL.Query()
-	LoginUUID := query.Get("uuid")
-	slog.Info("正在连接websocket", "[uuid]:", LoginUUID)
+	token := query.Get("token")
+	slog.Info("获取到的websocket token", "token", token)
+	if token == "" {
+		slog.Error("websocket连接未提供token")
+		writer.WriteHeader(http.StatusUnauthorized)
+		writer.Write([]byte("未提供token"))
+		return
+	}
+	// 解析Token
+	claims, err := util.ParseToken(token) // 注意这里直接传token，不是parts[1]
+	if err != nil {
+		slog.Error("websocket无效的token", err)
+		writer.WriteHeader(http.StatusUnauthorized)
+		writer.Write([]byte("无效的token"))
+		return
+	}
+	// 2. 验证通过后，继续处理原逻辑（使用Token中的用户信息）
+	slog.Info("正在连接websocket", "[userUUID]:", claims.UUID)
+
 	// 创建并升级连接
 	conn, err := (&websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
@@ -67,15 +84,11 @@ func (w *WebSocketApi) Test(c *gin.Context, writer http.ResponseWriter, request 
 		slog.Error("websocket upgrade failed", err)
 		return
 	}
-	// 获取客服信息
-	uuidFromString, err := uuid.Parse(LoginUUID)
-	if err != nil {
-		slog.Error("错误的uuid")
-		return
-	}
-	user, err := userService.GetUserInfo(uuidFromString)
+
+	user, err := userService.GetUserInfo(claims.UUID)
 	if err != nil {
 		slog.Error("建立websocket中，获取user信息失败", err)
+		conn.Close() // 补充关闭连接
 		return
 	}
 	// 创建Node节点

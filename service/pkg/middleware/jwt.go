@@ -37,7 +37,7 @@ func JWTInterceptor() gin.HandlerFunc {
 		}
 		// 【新增】判断 Token 是否即将过期（例如：剩余时间 < 30分钟），如果是则生成新 Token
 		if claims.ExpiresAt != nil && claims.ExpiresAt.Unix()-time.Now().Unix() < 30*60 {
-			newToken, err := util.GenerateToken(claims.UserID, claims.Username, claims.UserUUID)
+			newToken, err := util.GenerateToken(claims.ID, claims.Username, claims.UUID)
 			if err == nil {
 				c.Header("new-token", newToken)
 			}

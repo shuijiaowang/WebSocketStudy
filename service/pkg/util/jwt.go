@@ -6,7 +6,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 )
 
 // JWT密钥（实际项目中建议从环境变量读取）
@@ -14,21 +13,21 @@ var jwtSecret = []byte("your-secret-key")
 
 // 自定义claims
 type Claims struct {
-	UserID   int       `json:"id"`
-	Username string    `json:"username"`
-	UserUUID uuid.UUID `json:"uuid"`
+	ID       int    `json:"id"`
+	Username string `json:"username"`
+	UUID     string `json:"uuid"`
 	jwt.RegisteredClaims
 }
 
 // 生成JWT令牌
-func GenerateToken(userID int, username string, userUUID uuid.UUID) (string, error) {
+func GenerateToken(userID int, username string, userUUID string) (string, error) {
 	// 设置过期时间（例如24小时）
 	expirationTime := time.Now().Add(240 * time.Hour)
 
 	claims := &Claims{
-		UserID:   userID,
+		ID:       userID,
 		Username: username,
-		UserUUID: userUUID,
+		UUID:     userUUID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
